@@ -56,7 +56,7 @@ public class ServerResource {
         if (port == 21)
             serversAvailable.put(name, new Server(address, name));
         else
-            serversAvailable.put(name, new Server(address, name, port));]
+            serversAvailable.put(name, new Server(address, name, port));
         return "server Added !";
     }
 
@@ -98,7 +98,7 @@ public class ServerResource {
     @GET
     @Path("/{name}/list/{path: .*}")
     @Produces(MediaType.TEXT_PLAIN)
-    public Response listFTP(@PathParam("name") String name, @PathParam("path") String path, @HeaderParam("username") String username, @HeaderParam("password") String password) {
+    public Response listFTP(@PathParam("name") String name, @PathParam("path") String path) {
         Response.ResponseBuilder res;
         Server server = serversAvailable.get(name);
         connect(server);
