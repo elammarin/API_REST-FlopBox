@@ -1,17 +1,12 @@
 package fil.sr2.flopbox;
 
-//import org.apache.commons.net.ftp.FTPClient;
-
 import org.apache.commons.net.ftp.FTPClient;
 import org.apache.commons.net.ftp.FTPFile;
 
 import javax.ws.rs.*;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
-import java.io.File;
-import java.io.FileOutputStream;
-import java.io.IOException;
-import java.io.OutputStream;
+import java.io.*;
 import java.util.HashMap;
 import java.util.Map;
 
@@ -33,21 +28,12 @@ public class ServerResource {
         return toReturn;
     }
 
-
     @GET
     @Path("/{name}")
     @Produces(MediaType.TEXT_PLAIN)
     public String getAddress(@PathParam("name") String name) {
         return "server "+name+" correspond to the address : " + serversAvailable.get(name).getAddress() + "\n";
     }
-
-    /*@POST
-    @Path("/{name}")
-    @Produces(MediaType.TEXT_PLAIN)
-    public String add(@PathParam("name") String name, @QueryParam("address") String address) {
-        serversAvailable.put(name, new Server(address, name));
-        return "server Added !";
-    }*/
 
     @POST
     @Path("/{name}")
@@ -60,7 +46,7 @@ public class ServerResource {
         return "server Added !";
     }
 
-    private FTPClient connect(Server server) {
+    private void connect(Server server) {
         ftpClient = new FTPClient();
         try {
             ftpClient.connect(server.getAddress(), server.getPort());
@@ -68,24 +54,17 @@ public class ServerResource {
         } catch (IOException e) {
             throw new RuntimeException(e);
         }
-        return ftpClient;
     }
 
 
 
-   /* @PUT
+    @PUT
+    @Produces(MediaType.TEXT_PLAIN)
     @Path("/{name}")
-    public void update(@PathParam("name") String name, @QueryParam("address") String address) {
-        System.out.println("@PUT");
-        FTPClient ftpClient = new FTPClient();
-        try {
-            ftpClient.connect(address);
-        }
-        catch (IOException e){
-            throw new RuntimeException(e);
-        }
-        serversAvailable.put(name, ftpClient);
-    }*/
+    public String update(@PathParam("name") String name, @QueryParam("address") String address) {
+        serversAvailable.get(name).setAddress(address);
+        return "server edited!";
+    }
 
     @DELETE
     @Path("</{name}")
@@ -151,10 +130,86 @@ public class ServerResource {
 
     }
 
-    
+    @POST
+    @Path("/{name}/directory/{path: .*}")
+    @Produces(MediaType.TEXT_PLAIN)
+    public Response mkdr(@PathParam("name") String name, @PathParam("path") String path) {
+        Response.ResponseBuilder res;
+        try  {
+            connect(serversAvailable.get(name));
+            if (ftpClient.makeDirectory(path)) {
+                res = Response.status(Response.Status.OK).entity("Directory created\n");
+            } else {
+                res = Response.status(Response.Status.INTERNAL_SERVER_ERROR).entity("cannot create the directory\n");
+            }
+            ftpClient.disconnect();
+        } catch (Exception e) {
+            res = Response.status(Response.Status.INTERNAL_SERVER_ERROR).entity(e.getMessage());
+        }
+        return res.build();
+    }
 
 
-        private void disconnect () {
+    @DELETE
+    @Path("/{name}/file/{path: .*}")
+    @Produces(MediaType.TEXT_PLAIN)
+    public Response delete(@PathParam("name") String name, @PathParam("path") String path) {
+        Response.ResponseBuilder res;
+        try  {
+            connect(serversAvailable.get(name));
+            if (ftpClient.deleteFile(path)) {
+                res = Response.status(Response.Status.OK).entity("File deleted\n");
+            } else {
+                res = Response.status(Response.Status.OK).entity("cannot delete this file\n");
+            }
+            ftpClient.disconnect();
+        } catch (Exception e) {
+            res = Response.status(Response.Status.INTERNAL_SERVER_ERROR).entity(e.getMessage());
+        }
+        return res.build();
+    }
+
+    @PUT
+    @Path("/{name}/file/{path: .*}")
+    @Produces(MediaType.TEXT_PLAIN)
+    public Response renameFile(@PathParam("name") String name, @PathParam("path") String path,@QueryParam("newName") String newName) {
+        Response.ResponseBuilder res;
+        try {
+            this.ftpClient = new FTPClient();
+            connect(serversAvailable.get(name));
+            if (ftpClient.rename(path, newName)) {
+                res = Response.status(Response.Status.OK).entity("renamed !\n");
+            } else {
+                res = Response.status(Response.Status.BAD_REQUEST).entity("cannot rename the file\n");
+            }
+            ftpClient.disconnect();
+        } catch (Exception e) {
+            res = Response.status(Response.Status.BAD_REQUEST).entity(e.getMessage());
+        }
+        return res.build();
+    }
+
+    @PUT
+    @Path("/{name}/directory/{path: .*}")
+    @Produces(MediaType.TEXT_PLAIN)
+    public Response renameDir(@PathParam("name") String name, @PathParam("path") String path, @QueryParam("newName") String newName) {
+        Response.ResponseBuilder res;
+        try {
+            this.ftpClient = new FTPClient();
+            connect(serversAvailable.get(name));
+            if (ftpClient.rename(path, newName)) {
+                res = Response.status(Response.Status.OK).entity("renamed !\n");
+            } else {
+                res = Response.status(Response.Status.BAD_REQUEST).entity("cannot rename the dir\n");
+            }
+            disconnect();
+        } catch (Exception e) {
+            res = Response.status(Response.Status.BAD_REQUEST).entity(e.getMessage());
+        }
+        return res.build();
+    }
+
+    private void disconnect () {
             if (ftpClient.isConnected()) {
                 try {
                     ftpClient.disconnect();
@@ -165,4 +220,7 @@ public class ServerResource {
         }
 
 
-    }
+
+
+
+}
