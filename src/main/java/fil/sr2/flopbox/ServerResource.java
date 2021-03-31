@@ -16,6 +16,10 @@ public class ServerResource {
     private static final String PATH_NAME= "/tmp/";
     FTPClient ftpClient;
 
+    /**
+     * listing of the servers
+     * @return list of name server
+     */
     @GET
     @Produces(MediaType.TEXT_PLAIN)
     public String getServers(){
@@ -28,12 +32,28 @@ public class ServerResource {
         return toReturn;
     }
 
+    /**
+     * Show the address corresponding to the name server
+     *
+     * @param name the name of the  server
+     * @return the response
+     */
+
     @GET
     @Path("/{name}")
     @Produces(MediaType.TEXT_PLAIN)
     public String getAddress(@PathParam("name") String name) {
         return "server "+name+" correspond to the address : " + serversAvailable.get(name).getAddress() + "\n";
     }
+
+    /**
+     * link a name to a Server
+     *
+     * @param name   the name of the server
+     * @param address the address of the server
+     * @param port the Port
+     * @return the response of this command
+     */
 
     @POST
     @Path("/{name}")
