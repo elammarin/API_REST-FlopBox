@@ -67,7 +67,7 @@ public class ServerResource {
     }
 
     @DELETE
-    @Path("</{name}")
+    @Path("/{name}")
     public void remove(@PathParam("name") String name) {
         serversAvailable.remove(name);
     }
