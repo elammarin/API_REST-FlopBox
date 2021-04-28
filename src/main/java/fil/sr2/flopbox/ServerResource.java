@@ -123,7 +123,7 @@ public class ServerResource {
     public Response getFileFTP(@PathParam("name") String name, @PathParam("path") String path) {
             Response.ResponseBuilder res;
             connect(serversAvailable.get(name));
-            File file = new File(PATH_NAME + path);
+            File file = new File(PATH_NAME + name + "/" + path);
             System.out.println(file);
             if (!file.exists()) {
                 file.getParentFile().mkdirs();
