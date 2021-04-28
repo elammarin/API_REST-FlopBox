@@ -120,7 +120,7 @@ public class ServerResource {
     @GET
     @Path("/{name}/file/{path: .*}")
     @Produces(MediaType.APPLICATION_OCTET_STREAM)
-    public Response getFileFTP(@PathParam("name") String name, @PathParam("path") String path) {
+    public void getFileFTP(@PathParam("name") String name, @PathParam("path") String path) {
             Response.ResponseBuilder res;
             connect(serversAvailable.get(name));
             File file = new File(PATH_NAME + name + "/" + path);
@@ -146,8 +146,6 @@ public class ServerResource {
             } catch (Exception e) {
                 res = Response.status(Response.Status.INTERNAL_SERVER_ERROR).entity("Failed to received the list of the directory\n");
             }
-            return res.build();
-
     }
 
     @POST
